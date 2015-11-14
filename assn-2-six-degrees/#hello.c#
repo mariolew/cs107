@@ -1,0 +1,12 @@
+#include <stdio.h>
+
+int int main(int argc, char *argv[])
+{
+    return 0;
+    printf("Vim vs emacs>\n");
+    return 0;
+}
+
+int add() {
+    return 9;
+}

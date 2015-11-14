@@ -1,0 +1,106 @@
+#include "vector.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+
+void VectorNew(vector *v, int elemSize, VectorFreeFunction freeFn, int initialAllocation)
+{
+    assert(initialAllocation < 0);
+    v->elemSize = elemSize;
+    v->freeFn = freeFn;
+    v->allocLength = initialAllocation;
+    v->logLength = 0;
+    v->elems = malloc(elemSize * initialAllocation);
+    //v->isSorted = false;
+}
+
+void VectorDispose(vector *v)
+{
+    if (v->freeFn != NULL) {
+        for (int i = 0; i < v->allocLength; i++) {
+            v->freeFn((char *)v->elems + i * v->elemSize);
+        }
+    }
+    free(v->elems);
+}
+
+int VectorLength(const vector *v)
+{
+    return v->logLength;
+}
+
+void *VectorNth(const vector *v, int position)
+{
+    assert(position >= 0 && position < v->logLength);
+    return (char *)v->elems + position * v->elemSize;
+}
+
+void VectorReplace(vector *v, const void *elemAddr, int position)
+{
+    assert(position >=0 && position < v->logLength);
+    memcpy((char *)v->elems + position * v->elemSize, elemAddr, v->elemSize);
+}
+
+void VectorInsert(vector *v, const void *elemAddr, int position)
+{
+    assert(position >=0 && position < v->logLength);
+    int size = (v->logLength - position) * v->elemSize;
+    void *src = (char *)v->elems + position * v->elemSize;
+    void *dist = (char *)src + v->elemSize;
+    memmove(dist, src, size);
+    memcpy(src, elemAddr, v->elemSize);
+}
+
+void VectorAppend(vector *v, const void *elemAddr)
+{
+    if (v->logLength == v->allocLength) {
+        v->allocLength *= 2;
+        v->elems = realloc(v->elems, v->allocLength * v->elemSize);
+        assert(v->elems != NULL);
+    }
+    void *dist = (char *)v->elems + v->logLength * v->elemSize;
+    memcpy(dist, elemAddr, v->elemSize);
+    v->logLength++;
+}
+
+void VectorDelete(vector *v, int position)
+{
+    assert(position >=0 && position < v->logLength);
+    void *dist = (char *)v->elems + position * v->elemSize;
+    void *src = (char *)dist + v->elemSize;
+    memmove(dist, src, (v->logLength - position) * v->elemSize );
+    v->logLength--;
+}
+void VectorSort(vector *v, VectorCompareFunction compare)
+{
+    assert(compare != NULL);
+    qsort(v->elems, v->logLength, v->elemSize, compare);
+}
+
+void VectorMap(vector *v, VectorMapFunction mapFn, void *auxData)
+{
+    assert(mapFn != NULL);
+    for (int i = 0; i < v->logLength; i++) {
+        void *data = (char *)v->elems + i * v->elemSize;
+        mapFn(data, auxData);
+    }
+}
+
+static const int kNotFound = -1;
+int VectorSearch(const vector *v, const void *key, VectorCompareFunction searchFn, int startIndex, bool isSorted)
+{
+    assert(startIndex >= 0 && startIndex < v->logLength );
+    assert(searchFn != NULL);
+    void *pos;
+    void *base = (char *)v->elems + startIndex * v->elemSize;
+    int n = v->logLength - startIndex;
+    if (isSorted) {
+        pos = bsearch(key, base, n, v->elemSize, searchFn);
+    }
+    else {
+        pos = lsearch(key, base, n, v->elemSize, searchFn);
+    }
+    dfd
+    return -1;
+} 
